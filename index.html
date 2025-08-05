@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dual Joystick RC</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #ffffff;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .zone {
+      flex: 1;
+      position: relative;
+    }
+
+    #leftZone, #rightZone {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="leftZone" class="zone"></div>
+  <div id="rightZone" class="zone"></div>
+
+  <script>
+    const send = (cmd) => {
+      fetch(`http://192.168.4.1/${cmd}`)
+        .then(() => console.log("Sent:", cmd))
+        .catch(err => console.error("Error:", err));
+    };
+
+    const createJoystick = (zone, isLeft) => {
+      return nipplejs.create({
+        zone: zone,
+        mode: 'static',
+        position: { left: isLeft ? '50%' : '50%', top: '50%' },
+        color: isLeft ? 'lime' : 'red',
+        size: 120
+      });
+    };
+
+    // Kontrol kiri (gerak motor)
+    const leftJoystick = createJoystick(document.getElementById('leftZone'), true);
+    leftJoystick.on('dir', (evt, data) => {
+      const dir = data.direction.angle;
+      if (dir === 'up') send('forward');
+      else if (dir === 'down') send('back');
+      else if (dir === 'left') send('left');
+      else if (dir === 'right') send('right');
+    });
+
+    leftJoystick.on('end', () => {
+      send('stop');
+    });
+
+    // Kontrol kanan (opsional)
+    const rightJoystick = createJoystick(document.getElementById('rightZone'), false);
+    rightJoystick.on('dir', (evt, data) => {
+      // Tambahkan fitur jika ada (misalnya kamera, servo, lampu, dsb)
+      console.log("Right zone direction:", data.direction.angle);
+    });
+  </script>
+</body>
+</html>
